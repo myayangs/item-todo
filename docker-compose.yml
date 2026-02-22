@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  todo:
+    container_name: todo-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myyngstwn/item-todo:latest
+    ports:
+      - "7000:5000"
+    volumes:
+      - ./todos.json:/app/todos.json
+    networks:
+      - skola-net
+
+networks:
+  skola-net:
+    driver: bridge

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do App</title>
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3Ctext x='50' y='65' font-size='55' text-anchor='middle' fill='white'%3E%E2%9C%93%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+
+  <main class="wrap">
+    <header class="hero">
+      <div class="hero-left">
+        <div class="chip">🚀 Productivity Console</div>
+        <h1>Task Manager</h1>
+
+        {% set total = todos|length %}
+        {% set done = (todos|selectattr('completed')|list)|length %}
+
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span><b>{{ done }}</b> done</span>
+            <span><b>{{ total }}</b> total</span>
+          </div>
+          <div class="progress">
+            <div class="bar" style="width:{% if total == 0 %}0{% else %}{{ (done*100)//total }}{% endif %}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <button id="themeToggle" class="theme-btn" type="button" aria-label="Toggle theme">🌙</button>
+
+        <div class="statcard">
+          <div class="statnum">{{ total }}</div>
+          <div class="statlabel">Active Tasks</div>
+        </div>
+      </div>
+    </header>
+
+    <form class="addbar" action="/add" method="POST">
+      <div class="inputwrap">
+        <input name="task" type="text" placeholder="Add a new task…" required />
+      </div>
+
+      <input class="due" type="datetime-local" name="due_at" required />
+
+      <select name="priority">
+        <option>High</option>
+        <option selected>Medium</option>
+        <option>Low</option>
+      </select>
+
+      <button type="submit" class="primary">Add</button>
+    </form>
+
+    <section class="list">
+      {% for todo in todos %}
+      <div class="row pr-{{ todo.priority|lower }} {% if todo.completed %}done{% endif %}">
+        <div class="leftbar"></div>
+
+        <div class="content">
+          {% if edit_id == todo.id %}
+          <form class="editline" action="/edit/{{ todo.id }}" method="POST">
+            <input name="task" value="{{ todo.task }}" required />
+            <input class="due" type="datetime-local" name="due_at" value="{{ todo.due_at or '' }}" required />
+
+            <select name="priority">
+              <option {% if todo.priority=="High" %}selected{% endif %}>High</option>
+              <option {% if todo.priority=="Medium" %}selected{% endif %}>Medium</option>
+              <option {% if todo.priority=="Low" %}selected{% endif %}>Low</option>
+            </select>
+
+            <button class="ghost" type="submit">Save</button>
+            <a class="ghost" href="/">Cancel</a>
+          </form>
+          {% else %}
+          <div class="taskline">
+            <span class="pill prpill-{{ todo.priority|lower }}">{{ todo.priority }}</span>
+            <div class="taskblock">
+              <span class="task">{{ todo.task }}</span>
+              {% if todo.due_display %}
+              <span class="duebadge">Scheduled: {{ todo.due_display }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="actions">
+          <form action="/toggle/{{ todo.id }}" method="POST">
+            <button class="ghost" type="submit">
+              {% if todo.completed %}Undo{% else %}Complete{% endif %}
+            </button>
+          </form>
+
+          <form action="/delete/{{ todo.id }}" method="POST" onsubmit="return confirm('Delete this task?')">
+            <button class="ghost danger" type="submit">Delete</button>
+          </form>
+
+          <a class="ghost" href="/?edit={{ todo.id }}">Edit</a>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if todos|length == 0 %}
+      <div class="empty">
+        <div class="emoji">✨</div>
+        <div class="t1">No tasks yet</div>
+        <div class="t2">Add your first task above.</div>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const btn = document.getElementById("themeToggle");
+
+      const saved = localStorage.getItem("theme");
+      const preferDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initial = saved || (preferDark ? "dark" : "light");
+
+      root.setAttribute("data-theme", initial);
+      btn.textContent = initial === "dark" ? "☀️" : "🌙";
+
+      btn.addEventListener("click", () => {
+        const cur = root.getAttribute("data-theme") || "light";
+        const next = cur === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+        btn.textContent = next === "dark" ? "☀️" : "🌙";
+      });
+    })();
+  </script>
+
+</body>
+
+</html>
