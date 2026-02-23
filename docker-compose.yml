@@ -2,10 +2,7 @@ version: "3.8"
 
 services:
   todo:
-    container_name: todo-app
-    build:
-      context: .
-      dockerfile: Dockerfile
+    container_name: myyngstwn-todo-task
     image: myyngstwn/item-todo:latest
     ports:
       - "7000:5000"
